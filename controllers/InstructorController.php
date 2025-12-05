@@ -19,19 +19,26 @@ class InstructorController {
     }
 
     // Hiển thị Dashboard
-    public function dashboard() {
-        // Kiểm tra đăng nhập (Giả sử bạn đã có middleware hoặc check session ở đây)
-        if (!isset($_SESSION['user_id'])) {
-            header("Location: index.php?controller=auth&action=login");
-            exit();
-        }
-
-        $instructor_id = $_SESSION['user_id'];
-        $courses = $this->courseModel->getCoursesByInstructor($instructor_id);
-        
-        include 'views/instructor/dashboard.php';
+   public function dashboard() {
+    // Kiểm tra đăng nhập (Giả sử bạn đã có middleware hoặc check session ở đây)
+    if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) { // Thêm check role
+        header("Location: index.php?controller=auth&action=login");
+        exit();
     }
 
+    $instructor_id = $_SESSION['user_id'];
+    
+    // --- 1. Nhận tham số Tìm kiếm/Lọc/Sắp xếp ---
+    $keyword = isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : '';
+    $status = isset($_GET['status']) ? htmlspecialchars($_GET['status']) : 'all'; // 'all', 'approved', 'pending', 'rejected'
+    $sort = isset($_GET['sort']) ? htmlspecialchars($_GET['sort']) : 'newest';
+
+    // --- 2. Truyền tham số xuống Model ---
+    $courses = $this->courseModel->getCoursesByInstructor($instructor_id, $keyword, $status, $sort);
+    
+    // Truyền lại các tham số đã lọc/tìm kiếm sang View
+    include 'views/instructor/dashboard.php';
+}
     // Trang tạo khóa học (GET) và Xử lý tạo (POST)
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -54,7 +61,8 @@ class InstructorController {
                 'level' => $_POST['level'],
                 'category_id' => $_POST['category_id'],
                 'instructor_id' => $_SESSION['user_id'],
-                'image' => $image
+                'image' => $image,
+                'duration_weeks' => $_POST['duration_weeks']
             ];
 
             if ($this->courseModel->create($data)) {
@@ -100,7 +108,8 @@ class InstructorController {
                 'level' => $_POST['level'],
                 'category_id' => $_POST['category_id'],
                 'instructor_id' => $_SESSION['user_id'],
-                'image' => $image
+                'image' => $image,
+                'duration_weeks' => $_POST['duration_weeks']
             ];
 
             if ($this->courseModel->update($data)) {

@@ -2,7 +2,7 @@
 // index.php - File điều hướng trung tâm
 session_start(); // Khởi tạo session để dùng cho đăng nhập sau này
 require_once 'config/Database.php';
-
+require_once 'config/config.php';
 // 1. Lấy controller và action từ URL
 // Nếu không có, mặc định là 'home' và 'index' (Trang chủ)
 $controller = isset($_GET['controller']) ? $_GET['controller'] : 'home';

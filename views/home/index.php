@@ -12,15 +12,28 @@
                 </p>
                 <div class="d-flex gap-3">
                     <?php if (isset($_SESSION['user_id'])): ?>
-                         <a href="index.php?controller=student&action=dashboard" class="btn btn-light btn-lg fw-bold text-primary px-4 shadow">
-                            <i class="fas fa-graduation-cap me-2"></i>Vào học ngay
+                        <?php
+                            // Lấy vai trò của người dùng (0: Học viên, 1: Giảng viên, 2: Admin)
+                            $role = $_SESSION['role'];
+                            $dashboardController = 'student'; // Mặc định là Học viên (Role 0)
+                            
+                            if ($role == 1) { // Giảng viên
+                                $dashboardController = 'instructor';
+                            } elseif ($role == 2) { // Admin
+                                $dashboardController = 'admin';
+                            }
+                            // Tạo URL chuyển hướng
+                            $dashboardUrl = "index.php?controller={$dashboardController}&action=dashboard";
+                        ?>
+                        <a href="<?= $dashboardUrl ?>" class="btn btn-light btn-lg fw-bold text-primary px-4 shadow">
+                            <i class="fas fa-graduation-cap me-2"></i>Vào khu vực của tôi
                         </a>
                     <?php else: ?>
                         <a href="index.php?controller=auth&action=register" class="btn btn-light btn-lg fw-bold text-primary px-4 shadow">
                             <i class="fas fa-user-plus me-2"></i>Đăng ký tài khoản
                         </a>
-                        <a href="#featured-courses" class="btn btn-outline-light btn-lg px-4">
-                            Khám phá khóa học
+                        <a href="#featured-courses" class="btn btn-outline-light btn-lg px-4 fw-bold">
+                            Khám phá
                         </a>
                     <?php endif; ?>
                 </div>

@@ -22,32 +22,65 @@ class LessonController {
     }
 
     // --- CODE CŨ CỦA BẠN (GIỮ NGUYÊN) ---
-    public function learn() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        
-        if (!isset($_SESSION['user_id'])) {
-            header("Location: index.php?controller=auth&action=login");
-            exit;
-        }
-
-        $course_id = isset($_GET['course_id']) ? $_GET['course_id'] : null;
-        if (!$course_id) header("Location: index.php");
-
-        $lessons = $this->lessonModel->getLessonsByCourse($course_id);
-        
-        $current_lesson = null;
-        if (isset($_GET['lesson_id'])) {
-            $current_lesson = $this->lessonModel->getLessonById($_GET['lesson_id']);
-        } else if (count($lessons) > 0) {
-            $current_lesson = $lessons[0];
-        }
-        $materials = [];
-        if ($current_lesson) {
-            $materials = $this->materialModel->getByLessonId($current_lesson['id']);
-        }
-
-        include 'views/lessons/learn.php';
+    // Thay thế hàm public function learn() hiện tại:
+public function learn() {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: index.php?controller=auth&action=login");
+        exit;
     }
+    
+    // --- BỔ SUNG: Kiểm tra quyền truy cập khóa học ---
+    // Cần đảm bảo học viên đã đăng ký khóa học này
+    $course_id = isset($_GET['course_id']) ? $_GET['course_id'] : null;
+    $student_id = $_SESSION['user_id'];
+    
+    // Nếu học viên chưa đăng ký, chuyển hướng (Bạn cần có hàm isEnrolled trong EnrollmentModel)
+    if ($course_id && !$this->enrollmentModel->isEnrolled($student_id, $course_id)) {
+        echo "<script>alert('Bạn cần đăng ký khóa học này để xem bài học.'); window.location.href='index.php?controller=course&action=detail&id=$course_id';</script>";
+        exit;
+    }
+
+
+    if (!$course_id) header("Location: index.php");
+
+    $lessons = $this->lessonModel->getLessonsByCourse($course_id);
+    
+    $current_lesson = null;
+    if (isset($_GET['lesson_id'])) {
+        $current_lesson = $this->lessonModel->getLessonById($_GET['lesson_id']);
+    } else if (count($lessons) > 0) {
+        $current_lesson = $lessons[0];
+    }
+    
+    $materials = [];
+    if ($current_lesson) {
+        $materials = $this->materialModel->getByLessonId($current_lesson['id']);
+        
+        // --- TẠO URL NHÚNG VIDEO ---
+        if (!empty($current_lesson['video_url'])) {
+            $embed_url = $this->getYoutubeEmbedUrl($current_lesson['video_url']);
+        } else {
+            $embed_url = null;
+        }
+    }
+
+    include 'views/lessons/learn.php';
+}
+    // Trong class LessonController, thêm phương thức sau:
+private function getYoutubeEmbedUrl($url) {
+    if (strpos($url, 'youtube.com') !== false || strpos($url, 'youtu.be') !== false) {
+        // Sử dụng regex để tìm ID video
+        if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})%i', $url, $match)) {
+            $videoId = $match[1];
+            // Trả về link embed an toàn
+            return "https://www.youtube.com/embed/" . $videoId . "?rel=0&showinfo=0";
+        }
+    }
+    // Trả về link gốc nếu không phải YouTube, hy vọng nó là link nhúng trực tiếp
+    return $url; 
+}
 
     public function complete() {
         if (session_status() === PHP_SESSION_NONE) session_start();

@@ -55,24 +55,56 @@ class Course {
     // --- CÁC HÀM MỚI CHO GIẢNG VIÊN ---
 
     // 3. Lấy khóa học của riêng giảng viên đó (để hiện lên Dashboard)
-    public function getCoursesByInstructor($instructor_id) {
-        $query = "SELECT c.*, cat.name as category_name, 
-                  (SELECT COUNT(*) FROM enrollments WHERE course_id = c.id) as student_count
-                  FROM " . $this->table . " c
-                  LEFT JOIN categories cat ON c.category_id = cat.id
-                  WHERE c.instructor_id = :instructor_id
-                  ORDER BY c.created_at DESC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':instructor_id', $instructor_id);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+   // Trong models/Course.php
+// 3. Lấy khóa học của riêng giảng viên đó (để hiện lên Dashboard)
+public function getCoursesByInstructor($instructor_id, $keyword = '', $status = 'all', $sort = 'newest') {
+    $query = "SELECT c.*, cat.name as category_name, 
+              (SELECT COUNT(*) FROM enrollments WHERE course_id = c.id) as student_count
+              FROM " . $this->table . " c
+              LEFT JOIN categories cat ON c.category_id = cat.id
+              WHERE c.instructor_id = :instructor_id";
+    
+    // --- Bổ sung điều kiện tìm kiếm ---
+    if (!empty($keyword)) {
+        $query .= " AND c.title LIKE :keyword";
     }
+    
+    // --- Bổ sung điều kiện lọc trạng thái ---
+    // Kiểm tra nếu không phải 'all' thì mới lọc
+    if ($status !== 'all') {
+        $query .= " AND c.status = :status";
+    }
+
+    // --- Bổ sung điều kiện sắp xếp ---
+    switch ($sort) {
+        case 'oldest':  $query .= " ORDER BY c.created_at ASC"; break;
+        case 'price_desc': $query .= " ORDER BY c.price DESC"; break;
+        case 'price_asc': $query .= " ORDER BY c.price ASC"; break;
+        case 'students_desc': $query .= " ORDER BY student_count DESC"; break; // Sắp xếp theo số lượng học viên
+        default:           $query .= " ORDER BY c.created_at DESC"; break;
+    }
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':instructor_id', $instructor_id);
+
+    // Bind tham số
+    if (!empty($keyword)) {
+        $keyword = "%{$keyword}%";
+        $stmt->bindParam(':keyword', $keyword);
+    }
+    if ($status !== 'all') {
+        $stmt->bindParam(':status', $status);
+    }
+
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
     // 4. Tạo khóa học mới
     public function create($data) {
         $query = "INSERT INTO " . $this->table . " 
-                  (title, description, instructor_id, category_id, price, level, image)
-                  VALUES (:title, :description, :instructor_id, :category_id, :price, :level, :image)";
+                  (title, description, instructor_id, category_id, price, level, image ,duration_weeks)
+                  VALUES (:title, :description, :instructor_id, :category_id, :price, :level, :image, :duration_weeks)";
         $stmt = $this->conn->prepare($query);
         
         // Làm sạch dữ liệu (Security)
@@ -85,6 +117,7 @@ class Course {
         $stmt->bindParam(':price', $data['price']);
         $stmt->bindParam(':level', $data['level']);
         $stmt->bindParam(':image', $data['image']);
+        $stmt->bindParam(':duration_weeks', $data['duration_weeks']);
 
         if($stmt->execute()) {
             return true;
@@ -96,7 +129,7 @@ class Course {
     public function update($data) {
         $query = "UPDATE " . $this->table . " 
                   SET title = :title, description = :description, category_id = :category_id, 
-                      price = :price, level = :level";
+                      price = :price, level = :level, duration_weeks = :duration_weeks";
         
         // Nếu có cập nhật ảnh thì mới thêm vào câu SQL
         if (!empty($data['image'])) {
@@ -112,6 +145,7 @@ class Course {
         $stmt->bindParam(':category_id', $data['category_id']);
         $stmt->bindParam(':price', $data['price']);
         $stmt->bindParam(':level', $data['level']);
+        $stmt->bindParam(':duration_weeks', $data['duration_weeks']);
         $stmt->bindParam(':id', $data['id']);
         $stmt->bindParam(':instructor_id', $data['instructor_id']);
 

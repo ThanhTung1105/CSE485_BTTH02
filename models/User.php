@@ -145,5 +145,14 @@ class User {
         $stmt->execute();
         return $stmt->fetchColumn();
     }
+    public function getUserById($id) {
+        $query = "SELECT id, fullname, email, created_at, role, username FROM " . $this->table . " WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
 ?>

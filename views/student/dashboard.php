@@ -287,49 +287,69 @@
 <div class="row mt-5">
     <!-- Sidebar Profile -->
     <div class="col-lg-3 mb-4">
-    <div class="profile-card text-center">
-        <div class="bg-light p-4">
-            <img src="https://via.placeholder.com/120" class="profile-avatar mb-3" alt="Avatar">
-            <h5 class="mb-1"><?= htmlspecialchars($_SESSION['fullname'] ?? $_SESSION['username']) ?></h5>
-            <p class="text-muted mb-0">Học viên</p>
+    <style>
+    /* Thêm CSS để style icon thay cho ảnh */
+    .profile-avatar-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 5px solid #667eea; /* Viền đồng bộ với dashboard */
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f0f0f0;
+    }
+    .profile-avatar-icon i {
+        font-size: 60px; 
+        color: #764ba2; /* Màu icon */
+    }
+</style>
+
+<div class="profile-card text-center">
+    <div class="bg-light p-4">
+        <div class="profile-avatar-icon">
+            <i class="fas fa-user-graduate"></i> 
         </div>
         
-        <div class="p-4">
-            <div class="d-grid gap-2 mb-3">
-                <a href="#" class="btn btn-primary btn-sm rounded-pill">
-                    <i class="fas fa-user-edit me-2"></i>Chỉnh sửa hồ sơ
-                </a>
-            </div>
-            
-            <hr>
-            
-            <div class="text-start small">
-                <?php 
-                    // Kết nối CSDL tại đây để tránh lỗi "Undefined variable $conn"
-                    $conn = mysqli_connect("localhost", "root", "", "onlinecourse");
-                    mysqli_set_charset($conn, 'utf8');
-
-                    // Truy vấn lấy thông tin
-                    if (isset($_SESSION['username'])) {
-                        $user_query = mysqli_query($conn, "SELECT email, created_at FROM users WHERE username = '" . $_SESSION['username'] . "'");
-                        if ($user_query) {
-                            $user_data = mysqli_fetch_assoc($user_query);
-                        }
-                    }
-                ?>
-
-                <p class="mb-2">
-                    <strong>Email:</strong><br>
-                    <?= htmlspecialchars($user_data['email'] ?? $_SESSION['email'] ?? 'Đang cập nhật') ?>
-                </p>
+        <h5 class="mb-1">
+            <?= htmlspecialchars($_SESSION['fullname'] ?? $_SESSION['username']) ?>
+        </h5>
+        <p class="text-muted mb-0">Học viên</p>
+    </div>
+    
+    <div class="p-4">
+        <div class="d-grid gap-2 mb-3">
+            <a href="#" class="btn btn-primary btn-sm rounded-pill">
+                <i class="fas fa-user-edit me-2"></i>Chỉnh sửa hồ sơ
+            </a>
+        </div>
+        
+        <hr>
+        
+        <div class="text-start small">
+            <?php 
+                // --- BỎ TRUY VẤN CSDL Ở ĐÂY ---
+                // Dữ liệu email và created_at nên được Controller (ví dụ: StudentController) lấy
+                // và truyền qua View. Tạm thời sử dụng dữ liệu giả định/SESSION.
                 
-                <p class="mb-0">
-                    <strong>Tham gia:</strong><br>
-                    <?= isset($user_data['created_at']) ? date('d/m/Y', strtotime($user_data['created_at'])) : 'Đang cập nhật' ?>
-                </p>
-            </div>
+                // Giả định Controller đã truyền $user_data (Hoặc dùng SESSION nếu đã lưu)
+                $user_email = $user_data['email'] ?? $_SESSION['email'] ?? 'Đang cập nhật';
+                $created_at = $user_data['created_at'] ?? '2025-12-05';
+            ?>
+
+            <p class="mb-2">
+                <strong>Email:</strong><br>
+                <?= htmlspecialchars($user_email) ?>
+            </p>
+            
+            <p class="mb-0">
+                <strong>Tham gia:</strong><br>
+                <?= date('d/m/Y', strtotime($created_at)) ?>
+            </p>
         </div>
     </div>
+</div>
 </div>
 
     <!-- Courses Section -->
@@ -362,8 +382,9 @@
             <div class="course-card-item">
                 <div class="row g-0">
                     <div class="col-md-4">
-                        <img src="<?= !empty($myCourse['image']) ? 'upload/courses/' . $myCourse['image'] : 'https://via.placeholder.com/400x250?text=Course' ?>" 
-                             class="course-thumbnail w-100 h-100" style="object-fit: cover;" alt="Course Img">
+                        <img src="<?= BASE_URL ?>assets/uploads/courses/<?= htmlspecialchars($myCourse['image']) ?>" 
+     class="course-thumbnail w-100 h-100" style="object-fit: cover;" alt="Course Img">
+                             
                     </div>
                     <div class="col-md-8">
                         <div class="p-4">
@@ -469,8 +490,8 @@
     <?php if (count($courses) > 0): ?>
         <?php foreach ($courses as $course): ?>
             <div class="course-card">
-                <img src="<?= !empty($course['image']) ? 'upload/courses/' . $course['image'] : 'https://via.placeholder.com/300x160?text=No+Image' ?>" 
-                     class="course-card-image" alt="<?= htmlspecialchars($course['title']) ?>">
+                <img src="<?= BASE_URL ?>assets/uploads/courses/<?= htmlspecialchars($course['image']) ?>" 
+     class="course-card-image" alt="<?= htmlspecialchars($course['title']) ?>">
                 
                 <div class="course-card-body">
     <div class="d-flex gap-1 mb-2">

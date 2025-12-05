@@ -251,27 +251,44 @@ foreach ($courses as $c) {
         </div>
 
         <div class="filter-section" style="margin: 0; border-radius: 0; box-shadow: none; border-bottom: 1px solid #e0e0e0;">
-            <div class="row gap-2">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Tìm kiếm tên khóa học...">
-                </div>
-                <div class="col-md-4">
-                    <select class="form-select">
-                        <option>Tất cả trạng thái</option>
-                        <option>Đang bán</option>
-                        <option>Hết hạn</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select">
-                        <option>Sắp xếp</option>
-                        <option>Mới nhất</option>
-                        <option>Cũ nhất</option>
-                        <option>Giá cao đến thấp</option>
-                    </select>
-                </div>
+    <form action="index.php" method="GET">
+        <input type="hidden" name="controller" value="instructor">
+        <input type="hidden" name="action" value="dashboard">
+
+        <div class="row gap-2">
+            <div class="col-md-4">
+                <input type="text" 
+                       class="form-control" 
+                       name="keyword" 
+                       value="<?= htmlspecialchars($keyword ?? '') ?>"
+                       placeholder="Tìm kiếm tên khóa học...">
+            </div>
+
+            <div class="col-md-4">
+                <select class="form-select" name="status" onchange="this.form.submit()">
+                    <option value="all" <?= ($status == 'all') ? 'selected' : '' ?>>Tất cả trạng thái</option>
+                    <option value="approved" <?= ($status == 'approved') ? 'selected' : '' ?>>Đã Duyệt</option>
+                    <option value="pending" <?= ($status == 'pending') ? 'selected' : '' ?>>Chờ Duyệt</option>
+                    <option value="rejected" <?= ($status == 'rejected') ? 'selected' : '' ?>>Từ Chối</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <select class="form-select" name="sort" onchange="this.form.submit()">
+                    <option value="newest" <?= ($sort == 'newest') ? 'selected' : '' ?>>Mới nhất</option>
+                    <option value="oldest" <?= ($sort == 'oldest') ? 'selected' : '' ?>>Cũ nhất</option>
+                    <option value="price_desc" <?= ($sort == 'price_desc') ? 'selected' : '' ?>>Giá cao nhất</option>
+                    <option value="price_asc" <?= ($sort == 'price_asc') ? 'selected' : '' ?>>Giá thấp nhất</option>
+                    <option value="students_desc" <?= ($sort == 'students_desc') ? 'selected' : '' ?>>Học viên nhiều nhất</option>
+                </select>
+            </div>
+            
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-primary" style="height: 100%;">Lọc</button>
             </div>
         </div>
+    </form>
+</div>
 
         <div class="table-responsive">
         <table class="table table-hover mb-0">

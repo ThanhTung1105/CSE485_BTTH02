@@ -8,12 +8,35 @@
                     <?php if ($current_lesson): ?>
                         <h3 class="mb-3"><?= htmlspecialchars($current_lesson['title']) ?></h3>
                         
-                        <div class="bg-dark text-white d-flex align-items-center justify-content-center" style="height: 400px;">
-                            <div>
-                                <i class="fas fa-play-circle fa-4x mb-2"></i>
-                                <p>Video Player: <?= htmlspecialchars($current_lesson['video_url']) ?></p>
-                            </div>
-                        </div>
+                       <?php if (isset($embed_url)): ?>
+    <style>
+        .video-responsive {
+            position: relative;
+            padding-bottom: 56.25%; /* Tỷ lệ 16:9 */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            background: #000;
+        }
+        .video-responsive iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
+    
+    <div class="video-responsive mb-4">
+        <iframe src="<?= htmlspecialchars($embed_url) ?>"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+        </iframe>
+    </div>
+<?php else: ?>
+    <div class="alert alert-danger mb-4">Bài học này chưa có Video hoặc URL không hợp lệ.</div>
+<?php endif; ?>
 
                         <div class="mt-4">
                             <h5>Nội dung bài học:</h5>
